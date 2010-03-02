@@ -6,7 +6,11 @@
 ;;;; Author: Moskvitin Andrey <archimag@gmail.com>
 
 (restas:define-module #:restas.forum
-  (:use #:cl #:iter))
+  (:use #:cl #:iter)
+  (:export #:*storage*
+           #:*finalize-page*
+           
+           #:list-forums))
 
 (in-package #:restas.forum)
 

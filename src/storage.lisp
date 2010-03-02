@@ -8,13 +8,13 @@
 (in-package #:restas.forum)
 
 
-(defgeneric all-forums (storage))
+(defgeneric list-forums (storage))
 
 ;;;; storage in memory
 
 (defclass memory-storage ()
   ())
 
-(defmethod all-forums ((storage memory-storage))
+(defmethod list-forums ((storage memory-storage))
   '(("common-lisp" "Common Lisp")
     ("rulisp" "Обсуждение проекта")))

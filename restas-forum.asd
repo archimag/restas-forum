@@ -10,4 +10,5 @@
   :components ((:module "src"
                         :components ((:file "packages")
                                      (:file "storage" :depends-on ("packages"))
+                                     (:file "preferences" :depends-on ("storage"))
                                      (:file "forum" :depends-on ("storage"))))))
