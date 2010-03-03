@@ -49,3 +49,41 @@
        </div>
     {/foreach}
 {/template}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * list forum topics
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+{template show-list-topics}
+    <div class="forum-list-nav" >
+        {if $hrefAfter}<a href="{$hrefAfter}">« Позже</a>{/if}
+        {$first} - {min($first + length($topics) - 1, $totalCount)} 
+        из {$totalCount}  
+        {if $hrefBefore}<a href="{$hrefBefore}">Раньше »</a>{/if}
+    </div>
+
+    {foreach $topic in $topics}
+        <div class="topic">
+            <a href="{$topic.href}">{$topic.title != '' ? $topic.title : '*notitle*'}</a>
+            <div class="topicbody">
+                {$topic.body}
+            </div>
+            <div class="topic-info">
+                <span "topic-author">
+                    Автор:
+                    <strong>{$topic.author}</strong> - {$topic.createDate}
+
+                    <br />
+
+                    Сообщений: {$topic.messageCount}
+
+                    {if $topic.lastAuthor}
+                        <br />
+                        Последнее: {$topic.lastAuthor} - {$topic.lastDate}                        
+                    {/if}
+                </span>
+            </div>
+        </div>
+    {/foreach}
+{/template}

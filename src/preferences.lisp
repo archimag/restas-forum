@@ -8,7 +8,7 @@
 
 (in-package #:restas.forum)
 
-(defparameter *storage* (make-instance 'memory-storage))
+(defparameter *storage* nil)
 
 (defvar *finalize-page* #'restas.forum.view:default-standalone-frame)
 

@@ -9,19 +9,35 @@
 
 ;;;; css
 
-(restas:define-route css ("css/:file")
+(define-route css ("css/:file")
   (merge-pathnames (format nil "resources/css/~A" file)
                    *restas-forum-pathname*))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; list all forums
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(restas:define-route main ("")
+(define-route main ("")
   (finalize-page
-   (restas.forum.view:show-all-forums (list :forums
-                                            (iter (for forum in (list-forums *storage*))
-                                                  (collect (list :title (second forum)
-                                                                 :href (restas:genurl 'forum :forum-id (first forum)))))))
+   (restas.forum.view:show-all-forums 
+    (list :forums
+          (iter (for forum in (list-forums))
+                (collect (list :title (second forum)
+                               :href (restas:genurl 'forum :forum-id (first forum)))))))
    "Все форумы"))
 
-;;;; forum
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; view forum topics
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(define-route forum (":forum-id")
+  (finalize-page
+   (restas.forum.view:show-list-topics (list* :topics (list-topics forum-id 10 0)
+                                              :first 0
+                                              :total-count 10
+                                              (forum-info forum-id)))
+   "Форум"))
+
+
   

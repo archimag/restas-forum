@@ -10,7 +10,9 @@
   (:export #:*storage*
            #:*finalize-page*
            
-           #:list-forums))
+           #:storage-list-forums
+           #:storage-list-topics
+           #:storage-forum-info))
 
 (in-package #:restas.forum)
 
