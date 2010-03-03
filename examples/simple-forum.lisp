@@ -7,13 +7,4 @@
 
 (asdf:operate 'asdf:load-op '#:restas-forum)
 
-;; (restas:define-module #:simple.forum
-;;   (:use #:cl))
-
-;; (in-package #:simple.forum)
-
-;; (restas:define- core  (#:restas.forum))
-
-;; (restas:start-site '#:simple.forum :port 8080)
-
-(restas:start '#:simple.forum :port 8080)
+(restas:start '#:restas.forum :port 8080)
