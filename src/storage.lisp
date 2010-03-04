@@ -41,7 +41,7 @@
 (defclass memory-storage ()
   ())
 
-(defmethod list-forums ((storage memory-storage))
+(defmethod storage-list-forums ((storage memory-storage))
   '(("common-lisp" "Common Lisp")
     ("rulisp" "Обсуждение проекта")))
 
