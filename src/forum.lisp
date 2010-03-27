@@ -7,37 +7,57 @@
 
 (in-package #:restas.forum)
 
-;;;; css
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; aux
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-route css ("css/:file")
-  (merge-pathnames (format nil "resources/css/~A" file)
-                   *restas-forum-pathname*))
+(defun parse-start ()
+  (or (ignore-errors (parse-integer (hunchentoot:get-parameter "start")))
+      0))
+
+(defun forum-info-plist (info)
+  (list :title (second info)
+        :href (restas:genurl 'list-topics
+                             :forum-id (first info))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; list all forums
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-route main ("")
-  (finalize-page
-   (restas.forum.view:show-all-forums 
-    (list :forums
-          (iter (for forum in (list-forums))
-                (collect (list :title (second forum)
-                               :href (restas:genurl 'forum :forum-id (first forum)))))))
-   "Все форумы"))
+(define-route list-forums ("")
+  (list :forums (iter (for forum in (storage-list-forums *storage*))
+                      (collect (forum-info-plist forum)))
+        :title "Все форумы"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; view forum topics
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define-route list-topics (":forum-id")
+  (let ((start (parse-start)))
+    (list* :topics (iter (for topic in (storage-list-topics *storage* forum-id *max-topic-on-page* start))
+                         (collect (list* :href (restas:genurl 'topic-message-replies
+                                                              :topic-id (getf topic :id))
+                                         topic)))
+           :first start
+           (storage-forum-info *storage* forum-id))))
 
-(define-route forum (":forum-id")
-  (finalize-page
-   (restas.forum.view:show-list-topics (list* :topics (list-topics forum-id 10 0)
-                                              :first 0
-                                              :total-count 10
-                                              (forum-info forum-id)))
-   "Форум"))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; view topic
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+(define-route topic-message-replies ("thread/:topic-id"
+                                     :parse-vars (list :topic-id #'parse-integer))
+  (let ((message (storage-topic-message *storage* topic-id))
+        (start (parse-start)))
+    (list :list-forums-href (genurl 'list-forums)
+          :parent-forum (forum-info-plist (getf message :forum))
+          :message message
+          :replies (storage-topic-replies *storage*
+                                          topic-id
+                                          *max-reply-on-page*
+                                          start)
+          :title (getf message :title))))
+                                          
+                                          
   

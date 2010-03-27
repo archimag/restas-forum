@@ -38,7 +38,7 @@
  * list all forums
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-{template show-all-forums}
+{template list-forums}
     <div class="rss-link">
         <a href="{$feedHref}">RSS</a>
     </div>
@@ -55,12 +55,14 @@
  * list forum topics
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-{template show-list-topics}
-    <div class="forum-list-nav" >
-        {if $hrefAfter}<a href="{$hrefAfter}">« Позже</a>{/if}
-        {$first} - {min($first + length($topics) - 1, $totalCount)} 
-        из {$totalCount}  
-        {if $hrefBefore}<a href="{$hrefBefore}">Раньше »</a>{/if}
+{template list-topics}
+    <div class="forum-nav-panel" align="right">
+        <div class="info">
+            {if $hrefAfter}<a href="{$hrefAfter}">« Позже</a>{/if}
+            {$first} - {min($first + length($topics) - 1, $totalCount)} 
+            из {$totalCount}  
+            {if $hrefBefore}<a href="{$hrefBefore}">Раньше »</a>{/if}
+        </div>
     </div>
 
     {foreach $topic in $topics}
@@ -86,4 +88,57 @@
             </div>
         </div>
     {/foreach}
+{/template}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * show-topic
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+{template topic-message-replies}
+    <div class="thread">
+        <div id="forum-nav-panel">
+            <a class="rss-link" href="{$rssHref}">RSS</a>
+            <ul>
+                <li>
+                    <a href="{$listForumsHref}">Список форумов</a>
+                </li>
+                <li>
+                    <a href="{$parentForum.href}">{$parentForum.title}</a>
+                </li>
+                <li>
+                    <strong>{$message.title}</strong>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="topic">
+            <div>
+                <big>{$message.title}</big>
+            </div>
+            <div class="topic-info">
+                <span class="topic-author">
+                    Автор: <strong>{$message.author}</strong>
+                    - {$message.created}, Сообщений - {$message.countReplies}
+                </span>
+            </div>
+            <div class="topicbody">
+                {$message.body |noAutoescape}
+            </div>
+        </div>
+
+        {foreach $reply in $replies}
+            <div class="reply">
+                <div class="topic-info">
+                    <span class="topic-author">
+                        Автор: <strong>{$reply.author}</strong>
+                        - {$reply.date}
+                    </span>
+                </div>
+
+                <div class="replybody">
+                    {$reply.body |noAutoescape}
+                </div>
+            </div>
+        {/foreach}
+    </div>
 {/template}
