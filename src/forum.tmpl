@@ -9,32 +9,6 @@
 {namespace restas.forum.view}
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * Main frame for standalone forum
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
- 
-{template default-standalone-frame}
-    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-    {\n}
-    <html xmlns="http://www.w3.org/1999/xhtml" lang="ru" xml:lang="ru">
-	    <head>
-      	    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-
-            {if $title}
-                <title>{$title}</title>
-            {/if}
-
-            {foreach $item in $css}
-                <link href="{$item}" rel="stylesheet" type="text/css" />
-            {/foreach}
-	    </head>
-
-	    <body>
-            {$content |noAutoescape}
-        </body>
-    </html>
-{/template}
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * list all forums
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -55,40 +29,124 @@
  * list forum topics
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+/*
+      (E :span
+         (estrong "~A" (1+ start))
+         " - "
+         (estrong "~A" end)
+         " из "
+         (estrong "~A" all)
+         " « "
+         (if (> start 0)
+             (E :a
+                (if (> start 10)
+                    (ehref "~A?start=~A" url (- start 10))
+                    (ehref url))
+                "Позже")
+             (xfactory:text "Позже"))
+         " | "
+         (if (< (+ start 10) all)
+             (E :a
+                (ehref "~A?start=~A" url (+ start 10))
+                "Раньше")
+             (xfactory:text "Раньше"))
+         " » "))))
+
+*/
+       
+{template nav-panel}
+  <div align="right" class="info">
+      {if $hrefAfter}<a href="{$hrefAfter}">« Позже</a>{/if}
+      Темы <strong>{$first}</strong> -
+      <strong>{min($first + length($topics) - 1, $totalCount)}</strong>
+      из <strong>{$totalCount}</strong>
+      {if $hrefBefore}<a href="{$hrefBefore}">Раньше »</a>{/if}
+  </div>
+{/template}
+
 {template list-topics}
-    <div class="forum-nav-panel" align="right">
-        <div class="info">
-            {if $hrefAfter}<a href="{$hrefAfter}">« Позже</a>{/if}
-            {$first} - {min($first + length($topics) - 1, $totalCount)} 
-            из {$totalCount}  
-            {if $hrefBefore}<a href="{$hrefBefore}">Раньше »</a>{/if}
-        </div>
+    <div id="forum-nav-panel">
+        <a class="rss-link" href="{$hrefRss}">RSS</a>
+
+        <ul>
+            <li>
+                <a href="{$listForumsHref}">Список форумов</a>
+            </li>
+            
+            <li>
+                <strong>{$title}</strong>
+            </li>
+        </ul>
     </div>
 
-    {foreach $topic in $topics}
-        <div class="topic">
-            <a href="{$topic.href}">{$topic.title != '' ? $topic.title : '*notitle*'}</a>
-            <div class="topicbody">
-                {$topic.body}
+    {call nav-panel data="all" /}
+    <div class="topic-list">
+        {foreach $topic in $topics}
+            <div class="topic">
+                <a href="{$topic.href}">{$topic.title != '' ? $topic.title : '*notitle*'}</a>
+                <div class="topicbody">
+                    {$topic.body}
+                </div>
+                
+                <div class="topic-info">
+                    <span "topic-author">
+                        Автор: <strong>{$topic.author}</strong> - {$topic.createDate} <br />
+                        Сообщений: {$topic.messageCount}
+                        {if $topic.lastAuthor}
+                            <br />
+                            Последнее: {$topic.lastAuthor} - {$topic.lastDate}                        
+                        {/if}
+                    </span>
+                </div>
             </div>
-            <div class="topic-info">
-                <span "topic-author">
-                    Автор:
-                    <strong>{$topic.author}</strong> - {$topic.createDate}
+        {/foreach}
+    </div>
+    {call nav-panel data="all" /}
 
-                    <br />
+    {if $canCreateNewTopic}
+        <input type="button" value="+ Новая тему" onclick="newmessage()" />
 
-                    Сообщений: {$topic.messageCount}
-
-                    {if $topic.lastAuthor}
-                        <br />
-                        Последнее: {$topic.lastAuthor} - {$topic.lastDate}                        
-                    {/if}
-                </span>
+        <form id="editor" method="post" class="newmessage" style="display: none">
+            <div>Новая тема</div>
+            <div>
+                <strong>Тема:</strong>
+                <input name="title" size="80" />
             </div>
-        </div>
-    {/foreach}
+            <div>
+                <textarea id="wysiwyg" rows="30" name="body"  />
+            </div>
+            <div>
+                <input type="submit" value="Отправить" />
+            </div>
+        </form>
+    {/if}
 {/template}
+
+
+/*
+                (E :input
+                   (xfactory:attributes :type "button"
+                                        :value "+ Новая тема"
+                                        :onclick "newmessage()"))
+
+                (E :form
+                   (xfactory:attributes :method "post"
+                                        :class "newmessage"
+                                        :style "display: none"
+                                        :id "editor")
+                   (E :div "Новая тема")
+                   (E :div
+                      (estrong "Тема:")
+                      (E :input
+                         (xfactory:attributes :name "title" :size "80")))
+                   (E :div
+                      (E :textarea
+                         (xfactory:attributes :rows "30" :name "body" :id "wysiwyg")))
+                   (E :dev
+                      (E :input
+                         (xfactory:attributes :type "submit" :value "Отправить")))))
+
+*/
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * show-topic

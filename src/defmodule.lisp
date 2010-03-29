@@ -11,6 +11,7 @@
            #:*finalize-page*
            #:*max-topic-on-page*
            #:*max-reply-on-page*
+           #:*user-name-function*
            
            #:storage-list-forums
            #:storage-list-topics
@@ -22,9 +23,11 @@
 
 (defparameter *storage* nil)
 
-(defparameter *max-topic-on-page* 10)
+(defparameter *max-topic-on-page* 4)
 
 (defparameter *max-reply-on-page* 50)
+
+(defparameter *user-name-function* nil)
 
 (defparameter *restas-forum-pathname* 
   (asdf:component-pathname (asdf:find-system '#:restas-forum)))
@@ -44,6 +47,4 @@
         (closure-template.standard:xhtml-strict-frame
          (list :title (getf obj :title)
                :body (restas:render-object (find-package '#:restas.forum.view)
-                                           obj)
-               :css (loop for item in '("style.css")
-                       collect (restas:genurl 'css :file item))))))
+                                           obj)))))
