@@ -29,31 +29,6 @@
  * list forum topics
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/*
-      (E :span
-         (estrong "~A" (1+ start))
-         " - "
-         (estrong "~A" end)
-         " из "
-         (estrong "~A" all)
-         " « "
-         (if (> start 0)
-             (E :a
-                (if (> start 10)
-                    (ehref "~A?start=~A" url (- start 10))
-                    (ehref url))
-                "Позже")
-             (xfactory:text "Позже"))
-         " | "
-         (if (< (+ start 10) all)
-             (E :a
-                (ehref "~A?start=~A" url (+ start 10))
-                "Раньше")
-             (xfactory:text "Раньше"))
-         " » "))))
-
-*/
-       
 {template nav-panel}
   <div align="right" class="info">
       {if $hrefAfter}<a href="{$hrefAfter}">« Позже</a>{/if}
@@ -86,11 +61,6 @@
             <div class="topic">
                 {if $topic.hrefDelete}<a href="{$topic.hrefDelete}" class="delete-this">Удалить</a>{/if}
                 <a href="{$topic.href}">{$topic.title != '' ? $topic.title : '*notitle*'}</a>
-                /*
-                <div class="topicbody">
-                    {$topic.body}
-                </div>
-                */
                 
                 <div class="topic-info">
                     <span "topic-author">
@@ -194,4 +164,52 @@
            </div>
        </form>
     {/if}
+{/template}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * rss
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+/*
+     (RSS "rss"
+          (xfactory:attributes "version" "2.0")
+          (RSS "channel"
+               (RSS "title"
+                    (xfactory:text description))
+               (RSS "link"
+                    (xfactory:text (restas:genurl-with-host 'forum-main)))
+               (RSS "description"
+                    (xfactory:text "~A - RSS-лента" description))
+
+               (iter (for (forum-id topic-id author message date title) in messages)
+                     (RSS "item"
+                          (RSS "title"
+                               (xfactory:text "~A: ~A" author title))
+                          (RSS "link"
+                               (xfactory:text (restas:genurl-with-host 'view-topic :topic-id topic-id)))
+                          (RSS "description"
+                               (xfactory:text message))
+                          (RSS "pubDate"
+                               (xfactory:text (local-time:format-http-timestring nil (local-time:universal-to-timestamp date))
+                                              )))))))))
+
+*/
+
+{template rss-feed}
+    <rss version="2.0">
+        <channel>
+            <title>{$title}</title>
+            <link>{$link}</link>
+            <description>{$title} - RSS-лента</description>
+
+            {foreach $item in $messages}
+                <item>
+                    <title>{$item.author}: {$item.title}</title>
+                    <link>{$item.href}</link>
+                    <description>{$item.message}</description>
+                    <pubDate>{$item.date}</pubDate>
+                </item>
+            {/foreach}
+        </channel>
+    </rss>
 {/template}

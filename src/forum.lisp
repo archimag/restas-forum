@@ -7,9 +7,7 @@
 
 (in-package #:restas.forum)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; aux
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-start ()
   (or (ignore-errors (parse-integer (hunchentoot:get-parameter "start")))
@@ -25,18 +23,15 @@
   (if *user-name-function*
       (funcall *user-name-function*)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; list all forums
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-route list-forums ("")
   (list :forums (iter (for forum in (storage-list-forums *storage*))
                       (collect (forum-info-plist forum)))
+        :feed-href (restas:genurl 'all-forums-rss)
         :title "Все форумы"))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; view forum topics
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-route list-topics (":forum-id")
   (bind:bind ((start (parse-start))
@@ -66,9 +61,7 @@
             :first (1+ start)
             :can-create-new-topic (user-name)))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; create new topic
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-route create-topic (":forum-id"
                             :method :post
@@ -85,9 +78,7 @@
     (restas:redirect 'list-topics :forum-id forum-id)))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; delete topic
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-route delete-topic ("thread/delete/:topic-id"
                             :requirement 'user-name
@@ -97,9 +88,7 @@
                        :forum-id (storage-delete-topic *storage* topic-id))
       hunchentoot:+http-forbidden+))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; view topic
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-route topic-message-replies ("thread/:topic-id"
                                      :parse-vars (list :topic-id #'parse-integer))
@@ -127,6 +116,8 @@
           :can-create-message user
           :title (getf message :title))))
 
+;;;; create reply on message
+
 (define-route create-reply ("thread/:topic-id"
                             :method :post
                             :parse-vars (list :topic-id #'parse-integer)
@@ -138,6 +129,7 @@
                      :topic-id topic-id)))
   
 
+;;;; delete reply
 
 (define-route delete-message ("message/delete/:(reply-id)"
                               :requirement 'user-name)
@@ -145,3 +137,18 @@
       (restas:redirect 'topic-message-replies
                        :topic-id (storage-delete-reply *storage* reply-id))
       hunchentoot:+http-forbidden+))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; RSS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-route all-forums-rss ("rss/all.rss"
+                              :content-type "application/rss+xml"
+                              :render-method 'restas.forum.view:rss-feed)
+  (list :description (format nil "Форумы ~A" (if (boundp 'hunchentoot:*request*) (hunchentoot:host)))
+        :link (restas:genurl 'list-forums)
+        :messages (iter (for item in (storage-all-news *storage* 20))
+                        (collect (list* :href (restas:genurl-with-host 'topic-message-replies
+                                                                       :topic-id (getf item :topic-id))
+                                        item)))))
+                        

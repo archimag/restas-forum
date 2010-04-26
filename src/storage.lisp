@@ -59,6 +59,11 @@
   (:method (storage reply)
     (error "#'stroage-delete-reply not implemented")))
 
+(defgeneric storage-all-news (storage limit)
+  (:documentation "Return all new message")
+  (:method (storage limit)
+    (error "#'storage-all-news not implemented")))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; implementation in-memory storage
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

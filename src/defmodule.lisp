@@ -23,7 +23,8 @@
            #:storage-topic-message
            #:storage-topic-replies
            #:storage-create-reply
-           #:storage-delete-reply))
+           #:storage-delete-reply
+           #:storage-all-news))
 
 (in-package #:restas.forum)
 
