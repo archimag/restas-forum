@@ -84,6 +84,7 @@
     <div class="topic-list">
         {foreach $topic in $topics}
             <div class="topic">
+                {if $topic.hrefDelete}<a href="{$topic.hrefDelete}" class="delete-this">Удалить</a>{/if}
                 <a href="{$topic.href}">{$topic.title != '' ? $topic.title : '*notitle*'}</a>
                 /*
                 <div class="topicbody">
@@ -114,43 +115,17 @@
             <div>Новая тема</div>
             <div>
                 <strong>Тема:</strong>
-                <input name="title" size="80" />
+                <input name="title" size="80"></input>
             </div>
             <div>
-                <textarea id="wysiwyg" rows="30" name="body"  />
+                <textarea id="wysiwyg" rows="30" name="body"></textarea>
             </div>
             <div>
-                <input type="submit" value="Отправить" />
+                <input type="submit" value="Отправить"></input>
             </div>
         </form>
     {/if}
 {/template}
-
-
-/*
-                (E :input
-                   (xfactory:attributes :type "button"
-                                        :value "+ Новая тема"
-                                        :onclick "newmessage()"))
-
-                (E :form
-                   (xfactory:attributes :method "post"
-                                        :class "newmessage"
-                                        :style "display: none"
-                                        :id "editor")
-                   (E :div "Новая тема")
-                   (E :div
-                      (estrong "Тема:")
-                      (E :input
-                         (xfactory:attributes :name "title" :size "80")))
-                   (E :div
-                      (E :textarea
-                         (xfactory:attributes :rows "30" :name "body" :id "wysiwyg")))
-                   (E :dev
-                      (E :input
-                         (xfactory:attributes :type "submit" :value "Отправить")))))
-
-*/
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * show-topic
@@ -191,6 +166,9 @@
         {foreach $reply in $replies}
             <div class="reply">
                 <div class="topic-info">
+                    {if $reply.hrefDelete}
+                        <a class="delete-this" href="{$reply.hrefDelete}">Удалить</a>
+                    {/if}
                     <span class="topic-author">
                         Автор: <strong>{$reply.author}</strong>
                         - {$reply.date}
@@ -203,4 +181,17 @@
             </div>
         {/foreach}
     </div>
+
+    {if $canCreateMessage}
+       <input type="button" value="+ Новое сообщение" onclick="newmessage()"></input>
+       <form method="post" class="newmessage" style="display:none" id="editor">
+           <div>Новое сообщение: </div>
+           <div>
+               <textarea rows="30" name="body" id="wysiwyg"></textarea>
+           </div>
+           <div>
+               <input type="submit" value="Отправить"></input>
+           </div>
+       </form>
+    {/if}
 {/template}

@@ -11,6 +11,11 @@
 ;;;; storage generic interface
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defgeneric storage-admin-p (storage user)
+  (:documentation "Return T if USER is forum admin")
+  (:method (storage user)
+    nil))
+
 (defgeneric storage-list-forums (storage)
   (:documentation "Returns a list of forums")
   (:method (storage)
@@ -21,6 +26,16 @@
  of 'offset and not more than 'limit")
   (:method (storage forum limit offset)
     (error "#'storage-list-topics not implemented")))
+
+(defgeneric storage-create-topic (storage forum title body user)
+  (:documentation "Create new forum topic")
+  (:method (storage forum title body user)
+    (error "#'storage-create-topic not implemented")))
+
+(defgeneric storage-delete-topic (storage topic)
+  (:documentation "Delete topic")
+  (:method (storage topic)
+    (error "#'storage-delete-topic not implemented")))
 
 (defgeneric storage-forum-info (storage forum)
   (:method (storage forum)
@@ -33,6 +48,16 @@
 (defgeneric storage-topic-replies (storage topic limit offset)
   (:method (storage topic limit offset)
     (error "#'storage-topic-replies not implemented")))
+
+(defgeneric storage-create-reply (storage topic body user)
+  (:documentation "Create new reply")
+  (:method (storage topic body user)
+    (error "#'storage-create-reply not implemented")))
+
+(defgeneric storage-delete-reply (storage reply)
+  (:documentation "Delete reply")
+  (:method (storage reply)
+    (error "#'stroage-delete-reply not implemented")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; implementation in-memory storage

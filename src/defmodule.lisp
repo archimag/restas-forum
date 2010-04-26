@@ -12,12 +12,18 @@
            #:*max-topic-on-page*
            #:*max-reply-on-page*
            #:*user-name-function*
-           
+
+           ;; storage interface
+           #:storage-admin-p
            #:storage-list-forums
            #:storage-list-topics
+           #:storage-create-topic
+           #:storage-delete-topic
            #:storage-forum-info
            #:storage-topic-message
-           #:storage-topic-replies))
+           #:storage-topic-replies
+           #:storage-create-reply
+           #:storage-delete-reply))
 
 (in-package #:restas.forum)
 
