@@ -33,8 +33,7 @@
   (asdf:component-pathname (asdf:find-system '#:restas-forum)))
 
 (restas:define-submodule resources (#:restas.directory-publisher)
-  (restas.directory-publisher:*baseurl* '("css"))
-  (restas.directory-publisher:*directory* (merge-pathnames "resources/css/"
+  (restas.directory-publisher:*directory* (merge-pathnames "resources/"
                                                            *restas-forum-pathname*))
   (restas.directory-publisher:*autoindex* nil))
 
@@ -46,5 +45,6 @@
       (lambda (obj)
         (closure-template.standard:xhtml-strict-frame
          (list :title (getf obj :title)
+               :js (getf obj :js)
                :body (restas:render-object (find-package '#:restas.forum.view)
                                            obj)))))

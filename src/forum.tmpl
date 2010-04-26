@@ -80,13 +80,16 @@
     </div>
 
     {call nav-panel data="all" /}
+
     <div class="topic-list">
         {foreach $topic in $topics}
             <div class="topic">
                 <a href="{$topic.href}">{$topic.title != '' ? $topic.title : '*notitle*'}</a>
+                /*
                 <div class="topicbody">
                     {$topic.body}
                 </div>
+                */
                 
                 <div class="topic-info">
                     <span "topic-author">
@@ -101,6 +104,7 @@
             </div>
         {/foreach}
     </div>
+
     {call nav-panel data="all" /}
 
     {if $canCreateNewTopic}
