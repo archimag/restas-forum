@@ -44,6 +44,7 @@
             :js (iter (for item in '("jquery.js" "jquery.wysiwyg.js" "forum.js"))
                       (collect (format nil "../js/~A" item)))
             :css '("jquery.wysiwyg.css")
+            :href-rss (genurl 'forum-rss :forum-id forum-id)
             :total-count total-count
             :list-forums-href (genurl 'list-forums)
             :href-before (if (< (+ (1- start) *max-topic-on-page*)
@@ -52,7 +53,7 @@
             :href-after (if (> start 0)
                             (self-url (max (- start *max-topic-on-page*) 0)))
             :topics (iter (for topic in (storage-list-topics *storage* forum-id *max-topic-on-page* start))
-                          (collect (list* :href (restas:genurl 'topic-message-replies
+                          (collect (list* :href (restas:genurl 'view-topic
                                                                :topic-id (getf topic :id))
                                           :href-delete (if adminp
                                                            (restas:genurl 'delete-topic
@@ -90,7 +91,7 @@
 
 ;;;; view topic
 
-(define-route topic-message-replies ("thread/:topic-id"
+(define-route view-topic ("thread/:topic-id"
                                      :parse-vars (list :topic-id #'parse-integer))
   (let* ((message (storage-topic-message *storage* topic-id))
          (start (parse-start))
@@ -99,6 +100,8 @@
     (list :list-forums-href (genurl 'list-forums)
           :js (iter (for item in '("jquery.js" "jquery.wysiwyg.js" "forum.js"))
                     (collect (format nil "../../js/~A" item)))
+          :rss-href (restas:genurl 'topic-rss
+                                   :topic-id topic-id)
           :parent-forum (forum-info-plist (getf message :forum))
           :message message
           :replies (if adminp
@@ -125,7 +128,7 @@
   (let ((body (hunchentoot:post-parameter "body")))
     (unless (string= body "")
       (storage-create-reply *storage* topic-id body (user-name)))
-    (restas:redirect 'topic-message-replies
+    (restas:redirect 'view-topic
                      :topic-id topic-id)))
   
 
@@ -134,7 +137,7 @@
 (define-route delete-message ("message/delete/:(reply-id)"
                               :requirement 'user-name)
   (if (storage-admin-p *storage* (user-name))
-      (restas:redirect 'topic-message-replies
+      (restas:redirect 'view-topic
                        :topic-id (storage-delete-reply *storage* reply-id))
       hunchentoot:+http-forbidden+))
 
@@ -142,13 +145,33 @@
 ;;;; RSS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun make-rss-items (items)
+  (iter (for item in items)
+        (collect (list* :href (restas:genurl-with-host 'view-topic
+                                                       :topic-id (getf item :topic-id))
+                        item))))
+
 (define-route all-forums-rss ("rss/all.rss"
                               :content-type "application/rss+xml"
                               :render-method 'restas.forum.view:rss-feed)
   (list :description (format nil "Форумы ~A" (if (boundp 'hunchentoot:*request*) (hunchentoot:host)))
-        :link (restas:genurl 'list-forums)
-        :messages (iter (for item in (storage-all-news *storage* 20))
-                        (collect (list* :href (restas:genurl-with-host 'topic-message-replies
-                                                                       :topic-id (getf item :topic-id))
-                                        item)))))
+        :link (restas:genurl-with-host 'list-forums)
+        :messages (make-rss-items (storage-all-news *storage* *rss-item-count*))))
                         
+(define-route forum-rss ("rss/:(forum-id).rss"
+                         :content-type "application/rss+xml"
+                         :render-method 'restas.forum.view:rss-feed)
+  (list :description (first (storage-forum-info *storage* forum-id))
+        :link (restas:genurl-with-host 'list-topics
+                                       :forum-id forum-id)
+        :messages (make-rss-items (storage-forum-news *storage* forum-id *rss-item-count*))))
+
+(define-route topic-rss ("rss/threads/:(topic-id).rss"
+                         :parse-vars `(:topic-id ,#'parse-integer)
+                         :content-type "application/rss+xml"
+                         :render-method 'restas.forum.view:rss-feed)
+  (list :description (getf (storage-topic-message *storage* topic-id) :title)
+        :link (restas:genurl-with-host 'view-topic
+                                       :topic-id topic-id)
+        :messages (make-rss-items (storage-topic-news *storage* topic-id *rss-item-count*))))
+                                       

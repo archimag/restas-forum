@@ -12,6 +12,7 @@
            #:*max-topic-on-page*
            #:*max-reply-on-page*
            #:*user-name-function*
+           #:*rss-item-count*
 
            ;; storage interface
            #:storage-admin-p
@@ -24,11 +25,15 @@
            #:storage-topic-replies
            #:storage-create-reply
            #:storage-delete-reply
-           #:storage-all-news))
+           #:storage-all-news
+           #:storage-forum-news
+           #:storage-topic-news))
 
 (in-package #:restas.forum)
 
 (defparameter *storage* nil)
+
+(defparameter *rss-item-count* 20)
 
 (defparameter *max-topic-on-page* 4)
 

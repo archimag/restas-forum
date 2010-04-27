@@ -101,7 +101,7 @@
  * show-topic
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-{template topic-message-replies}
+{template view-topic}
     <div class="thread">
         <div id="forum-nav-panel">
             <a class="rss-link" href="{$rssHref}">RSS</a>
@@ -196,6 +196,7 @@
 */
 
 {template rss-feed}
+   {nil}<?xml version="1.0" encoding="utf-8"?>{\n}
     <rss version="2.0">
         <channel>
             <title>{$title}</title>

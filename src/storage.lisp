@@ -64,6 +64,16 @@
   (:method (storage limit)
     (error "#'storage-all-news not implemented")))
 
+(defgeneric storage-forum-news (storage forum limit)
+  (:documentation "Return all new messages on one forum")
+  (:method (storage forum limit)
+    (error "#'storage-forum-news not implemented")))
+
+(defgeneric storage-topic-news (storage topic limit)
+  (:documentation "Return all new messages on one topic")
+  (:method (storage topic limit)
+    (error "#'storage-topic-news not implemented")))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; implementation in-memory storage
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
