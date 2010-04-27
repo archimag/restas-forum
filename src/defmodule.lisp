@@ -35,7 +35,7 @@
 
 (defparameter *rss-item-count* 20)
 
-(defparameter *max-topic-on-page* 4)
+(defparameter *max-topic-on-page* 10)
 
 (defparameter *max-reply-on-page* 50)
 

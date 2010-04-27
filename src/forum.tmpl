@@ -170,31 +170,6 @@
  * rss
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/*
-     (RSS "rss"
-          (xfactory:attributes "version" "2.0")
-          (RSS "channel"
-               (RSS "title"
-                    (xfactory:text description))
-               (RSS "link"
-                    (xfactory:text (restas:genurl-with-host 'forum-main)))
-               (RSS "description"
-                    (xfactory:text "~A - RSS-лента" description))
-
-               (iter (for (forum-id topic-id author message date title) in messages)
-                     (RSS "item"
-                          (RSS "title"
-                               (xfactory:text "~A: ~A" author title))
-                          (RSS "link"
-                               (xfactory:text (restas:genurl-with-host 'view-topic :topic-id topic-id)))
-                          (RSS "description"
-                               (xfactory:text message))
-                          (RSS "pubDate"
-                               (xfactory:text (local-time:format-http-timestring nil (local-time:universal-to-timestamp date))
-                                              )))))))))
-
-*/
-
 {template rss-feed}
    {nil}<?xml version="1.0" encoding="utf-8"?>{\n}
     <rss version="2.0">
