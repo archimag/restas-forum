@@ -39,7 +39,7 @@
 
 (defparameter *max-topic-on-page* 10)
 
-(defparameter *max-reply-on-page* 6)
+(defparameter *max-reply-on-page* 50)
 
 (defparameter *user-name-function* nil)
 
