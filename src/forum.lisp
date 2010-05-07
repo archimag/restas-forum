@@ -217,27 +217,45 @@
                                                        :reply-id (getf item :id))
                         item))))
 
+(defun site-name ()
+  (or *site-name*
+      (if (boundp 'hunchentoot:*request*)
+          (hunchentoot:host))
+      "RESTAS-FORUMS"))
+
 (define-route all-forums-rss ("rss/all.rss"
                               :content-type "application/rss+xml"
                               :render-method 'restas.forum.view:rss-feed)
-  (list :description (format nil "Форумы ~A" (if (boundp 'hunchentoot:*request*) (hunchentoot:host)))
-        :link (restas:genurl-with-host 'list-forums)
-        :messages (make-rss-items (storage-all-news *storage* *rss-item-count*))))
+  (let ((title (format nil "~A: Форумы" (site-name))))
+    (list :title title
+          :description title
+          :link (restas:genurl-with-host 'list-forums)
+          :messages (make-rss-items (storage-all-news *storage* *rss-item-count*)))))
                         
 (define-route forum-rss ("rss/:(forum-id).rss"
                          :content-type "application/rss+xml"
                          :render-method 'restas.forum.view:rss-feed)
-  (list :description (first (storage-forum-info *storage* forum-id))
-        :link (restas:genurl-with-host 'list-topics
-                                       :forum-id forum-id)
-        :messages (make-rss-items (storage-forum-news *storage* forum-id *rss-item-count*))))
+  (let ((title (format nil
+                       "~A: Форум - ~A"
+                       (site-name)
+                       (first (storage-forum-info *storage* forum-id)))))
+    (list :title title
+          :description title
+          :link (restas:genurl-with-host 'list-topics
+                                         :forum-id forum-id)
+          :messages (make-rss-items (storage-forum-news *storage* forum-id *rss-item-count*)))))
 
 (define-route topic-rss ("rss/threads/:(topic-id).rss"
                          :parse-vars `(:topic-id ,#'parse-integer)
                          :content-type "application/rss+xml"
                          :render-method 'restas.forum.view:rss-feed)
-  (list :description (getf (storage-topic-message *storage* topic-id) :title)
-        :link (restas:genurl-with-host 'view-topic
-                                       :topic-id topic-id)
-        :messages (make-rss-items (storage-topic-news *storage* topic-id *rss-item-count*))))
+  (let ((message (storage-topic-message *storage* topic-id)))
+    (list :title (format nil
+                         "~A: ~A"
+                         (site-name)
+                         (getf message :title))
+          :description (getf message :body)
+          :link (restas:genurl-with-host 'view-topic
+                                         :topic-id topic-id)
+          :messages (make-rss-items (storage-topic-news *storage* topic-id *rss-item-count*)))))
                                        

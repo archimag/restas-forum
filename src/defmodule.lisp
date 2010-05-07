@@ -8,6 +8,7 @@
 (restas:define-module #:restas.forum
   (:use #:cl #:iter)
   (:export #:*storage*
+           #:*site-name*
            #:*finalize-page*
            #:*max-topic-on-page*
            #:*max-reply-on-page*
@@ -34,6 +35,8 @@
 (in-package #:restas.forum)
 
 (defparameter *storage* nil)
+
+(defparameter *site-name* nil)
 
 (defparameter *rss-item-count* 20)
 
