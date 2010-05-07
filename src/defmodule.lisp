@@ -22,9 +22,11 @@
            #:storage-delete-topic
            #:storage-forum-info
            #:storage-topic-message
+           #:storage-topic-reply-count
            #:storage-topic-replies
            #:storage-create-reply
            #:storage-delete-reply
+           #:storage-reply-position
            #:storage-all-news
            #:storage-forum-news
            #:storage-topic-news))
@@ -37,7 +39,7 @@
 
 (defparameter *max-topic-on-page* 10)
 
-(defparameter *max-reply-on-page* 1000)
+(defparameter *max-reply-on-page* 6)
 
 (defparameter *user-name-function* nil)
 

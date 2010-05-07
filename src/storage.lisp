@@ -45,6 +45,10 @@
   (:method (storage topic)
     (error "#'storage-list-messages not implemented")))
 
+(defgeneric storage-topic-reply-count (storage topic)
+  (:method (storage topic)
+    (error "#'storage-topic-reply-count not implemented")))
+
 (defgeneric storage-topic-replies (storage topic limit offset)
   (:method (storage topic limit offset)
     (error "#'storage-topic-replies not implemented")))
@@ -58,6 +62,11 @@
   (:documentation "Delete reply")
   (:method (storage reply)
     (error "#'stroage-delete-reply not implemented")))
+
+(defgeneric storage-reply-position (storage reply)
+  (:documentation "Return position reply in topic")
+  (:method (storage reply)
+    (error "#'storage-reply-position not implemented")))
 
 (defgeneric storage-all-news (storage limit)
   (:documentation "Return all new message")

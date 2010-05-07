@@ -23,6 +23,22 @@
   (if *user-name-function*
       (funcall *user-name-function*)))
 
+(defun topic-last-page-id (topic-id &optional topic-reply-count)
+  (ceiling (or topic-reply-count
+               (storage-topic-reply-count *storage* topic-id))
+           *max-reply-on-page*))
+
+(defun topic-pages (topic-id current &key topic-reply-count )
+  (cons (list :number 1
+              :href (restas:genurl 'view-topic
+                                   :topic-id topic-id)
+              :current (= 1 current))
+        (iter (for i from 2 to (topic-last-page-id topic-id topic-reply-count))
+              (collect (list :number i
+                             :href (restas:genurl 'view-topic-page
+                                                  :topic-id topic-id
+                                                  :page-id i)
+                             :current (= i current))))))
 ;;;; list all forums
 
 (define-route list-forums ("")
@@ -42,7 +58,9 @@
              (format nil "~A?start=~A" href start)))
       (list :title title
             :js (iter (for item in '("jquery.js" "jquery.wysiwyg.js" "forum.js"))
-                      (collect (format nil "../js/~A" item)))
+                      (collect (restas:genurl-submodule 'resources
+                                                        'restas.directory-publisher:route
+                                                        :path (list "js" item))))
             :css '("jquery.wysiwyg.css")
             :href-rss (genurl 'forum-rss :forum-id forum-id)
             :total-count total-count
@@ -55,6 +73,9 @@
             :topics (iter (for topic in (storage-list-topics *storage* forum-id *max-topic-on-page* start))
                           (collect (list* :href (restas:genurl 'view-topic
                                                                :topic-id (getf topic :id))
+                                          :pages (topic-pages (getf topic :id)
+                                                              -1
+                                                              :topic-reply-count (getf topic :message-count))
                                           :href-delete (if adminp
                                                            (restas:genurl 'delete-topic
                                                                           :topic-id (getf topic :id)))
@@ -89,12 +110,15 @@
                        :forum-id (storage-delete-topic *storage* topic-id))
       hunchentoot:+http-forbidden+))
 
-;;;; view topic
-
-(define-route view-topic ("thread/:topic-id"
-                                     :parse-vars (list :topic-id #'parse-integer))
+;;;; view-topic-page
+  
+(define-route view-topic-page ("thread/:topic-id/page:(page-id)"
+                               :parse-vars (list :topic-id #'parse-integer
+                                                 :page-id #'parse-integer))
   (let* ((message (storage-topic-message *storage* topic-id))
-         (start (parse-start))
+         (start (max (* *max-reply-on-page*
+                        (1- page-id))
+                     0))
          (user (user-name))
          (adminp (if user (storage-admin-p *storage* user))))
     (list :list-forums-href (genurl 'list-forums)
@@ -104,6 +128,7 @@
                                    :topic-id topic-id)
           :parent-forum (forum-info-plist (getf message :forum))
           :message message
+          :pages (topic-pages topic-id page-id)
           :replies (if adminp
                        (iter (for item in (storage-topic-replies *storage*
                                                                  topic-id
@@ -119,6 +144,33 @@
           :can-create-message user
           :title (getf message :title))))
 
+;;;; view topic
+
+(define-route view-topic ("thread/:topic-id"
+                          :parse-vars (list :topic-id #'parse-integer))
+  (view-topic-page :topic-id topic-id
+                   :page-id 1))
+
+;;;; view-reply
+
+(define-route view-reply ("messages/:reply-id"
+                          :parse-vars (list :reply-id #'parse-integer))
+  (multiple-value-bind (pos topic-id) (storage-reply-position *storage* reply-id)
+    (unless topic-id
+      (return-from view-reply hunchentoot:+http-not-found+))
+    (let ((page (ceiling pos
+                         *max-reply-on-page*)))
+      (hunchentoot:redirect
+       (format nil
+               "~A#comment-~A"
+               (if (= page 1)
+                   (restas:genurl 'view-topic
+                                  :topic-id topic-id)
+                   (restas:genurl 'view-topic-page
+                                  :topic-id topic-id
+                                  :page-id page))
+               reply-id)))))
+
 ;;;; create reply on message
 
 (define-route create-reply ("thread/:topic-id"
@@ -128,8 +180,22 @@
   (let ((body (hunchentoot:post-parameter "body")))
     (unless (string= body "")
       (storage-create-reply *storage* topic-id body (user-name)))
-    (restas:redirect 'view-topic
-                     :topic-id topic-id)))
+    (let ((last-page-id (topic-last-page-id topic-id)))
+      (if (= last-page-id 1)
+          (restas:redirect 'view-topic
+                           :topic-id topic-id)
+          (restas:redirect 'view-topic-page
+                           :topic-id topic-id
+                           :page-id last-page-id)))))
+
+
+(define-route create-reply-on-page ("thread/:topic-id/page:(page-id)"
+                                    :method :post
+                                    :parse-vars (list :topic-id #'parse-integer
+                                                      :page-id #'parse-integer)
+                                    :requirement 'user-name)
+  (declare (ignore page-id))
+  (create-reply :topic-id topic-id))
   
 
 ;;;; delete reply
@@ -147,8 +213,8 @@
 
 (defun make-rss-items (items)
   (iter (for item in items)
-        (collect (list* :href (restas:genurl-with-host 'view-topic
-                                                       :topic-id (getf item :topic-id))
+        (collect (list* :href (restas:genurl-with-host 'view-reply 
+                                                       :reply-id (getf item :id))
                         item))))
 
 (define-route all-forums-rss ("rss/all.rss"

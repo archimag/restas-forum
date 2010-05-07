@@ -61,6 +61,15 @@
             <div class="topic">
                 {if $topic.hrefDelete}<a href="{$topic.hrefDelete}" class="delete-this">Удалить</a>{/if}
                 <a href="{$topic.href}">{$topic.title != '' ? $topic.title : '*notitle*'}</a>
+                {if length($topic.pages) > 1}
+                    (стр.
+                    {foreach $page in $topic.pages}
+                        {if not(isFirst($page))}
+                            <a href="{$page.href}">{$page.number}</a>{nil}
+                            {if isLast($page)}){/if}
+                        {/if}
+                    {/foreach}
+                {/if}
                 
                 <div class="topic-info">
                     <span "topic-author">
@@ -102,6 +111,25 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 {template view-topic}
+   {call view-topic-page data="all" /}
+{/template}
+
+{template topic-pages-navigation}
+    <div class="topic-pages">
+        {if length($pages) > 1}
+            <strong>Страницы:</strong>
+            {foreach $page in $pages}
+                {if not($page.current)}
+                    <a href="{$page.href}">{$page.number}</a>
+                 {else}
+                    <span class="current-page">{$page.number}</span>
+                 {/if}
+            {/foreach}
+        {/if}
+    </div>
+{/template}
+
+{template view-topic-page}
     <div class="thread">
         <div id="forum-nav-panel">
             <a class="rss-link" href="{$rssHref}">RSS</a>
@@ -133,8 +161,12 @@
             </div>
         </div>
 
+        {call topic-pages-navigation}
+           {param pages: $pages /}
+        {/call}
+
         {foreach $reply in $replies}
-            <div class="reply">
+            <div class="reply" id="comment-{$reply.id}">
                 <div class="topic-info">
                     {if $reply.hrefDelete}
                         <a class="delete-this" href="{$reply.hrefDelete}">Удалить</a>
@@ -150,6 +182,10 @@
                 </div>
             </div>
         {/foreach}
+
+        {call topic-pages-navigation}
+           {param pages: $pages /}
+        {/call}
     </div>
 
     {if $canCreateMessage}
