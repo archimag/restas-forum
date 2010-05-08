@@ -9,19 +9,18 @@
 
 ;;; aux
 
+(defun user-name ()
+  (if *user-name-function*
+      (funcall *user-name-function*)))
+
 (defun parse-start ()
   (or (ignore-errors (parse-integer (hunchentoot:get-parameter "start")))
       0))
-
 
 (defun forum-info-plist (info)
   (list :title (second info)
         :href (restas:genurl 'list-topics
                              :forum-id (first info))))
-
-(defun user-name ()
-  (if *user-name-function*
-      (funcall *user-name-function*)))
 
 (defun topic-last-page-id (topic-id &optional topic-reply-count)
   (ceiling (or topic-reply-count
@@ -39,6 +38,19 @@
                                                   :topic-id topic-id
                                                   :page-id i)
                              :current (= i current))))))
+
+(defun site-name ()
+  (or *site-name*
+      (if (boundp 'hunchentoot:*request*)
+          (hunchentoot:host))
+      "RESTAS-FORUMS"))
+
+(defun js-urls ()
+  (iter (for item in '("jquery.js" "jquery.wysiwyg.js" "forum.js"))
+        (collect (restas:genurl-submodule 'resources
+                                          'restas.directory-publisher:route
+                                          :path (list "js" item)))))
+
 ;;;; list all forums
 
 (define-route list-forums ("")
@@ -57,10 +69,7 @@
     (flet ((self-url (start)
              (format nil "~A?start=~A" href start)))
       (list :title title
-            :js (iter (for item in '("jquery.js" "jquery.wysiwyg.js" "forum.js"))
-                      (collect (restas:genurl-submodule 'resources
-                                                        'restas.directory-publisher:route
-                                                        :path (list "js" item))))
+            :js (js-urls)
             :css '("jquery.wysiwyg.css")
             :href-rss (genurl 'forum-rss :forum-id forum-id)
             :total-count total-count
@@ -111,36 +120,47 @@
       hunchentoot:+http-forbidden+))
 
 ;;;; view-topic-page
+
   
 (define-route view-topic-page ("thread/:topic-id/page:(page-id)"
                                :parse-vars (list :topic-id #'parse-integer
                                                  :page-id #'parse-integer))
   (let* ((message (storage-topic-message *storage* topic-id))
+         (origin-message-id (getf message :message-id))
          (start (max (* *max-reply-on-page*
                         (1- page-id))
                      0))
          (user (user-name))
          (adminp (if user (storage-admin-p *storage* user))))
     (list :list-forums-href (genurl 'list-forums)
-          :js (iter (for item in '("jquery.js" "jquery.wysiwyg.js" "forum.js"))
-                    (collect (format nil "../../js/~A" item)))
+          :js (js-urls)
           :rss-href (restas:genurl 'topic-rss
                                    :topic-id topic-id)
           :parent-forum (forum-info-plist (getf message :forum))
-          :message message
+          :message (list* :href-reply (restas:genurl 'create-reply
+                                                     :message-id origin-message-id)
+                          message)
           :pages (topic-pages topic-id page-id)
-          :replies (if adminp
-                       (iter (for item in (storage-topic-replies *storage*
-                                                                 topic-id
-                                                                 *max-reply-on-page*
-                                                                 start))
-                             (collect (list* :href-delete (restas:genurl 'delete-message
-                                                                         :reply-id (getf item :id))
-                                             item)))
-                       (storage-topic-replies *storage*
-                                              topic-id
-                                              *max-reply-on-page*
-                                              start))
+          :replies (iter (for item in (storage-topic-replies *storage*
+                                                             topic-id
+                                                             *max-reply-on-page*
+                                                             start))
+                         (for reply-id = (getf item :id))
+                         (collect (list* :href-delete (if adminp
+                                                          (restas:genurl 'delete-message
+                                                                         :reply-id reply-id))
+                                         :href (restas:genurl 'view-reply
+                                                              :reply-id reply-id)
+                                         :href-reply (restas:genurl 'create-reply
+                                                                    :message-id reply-id)
+                                         :prev-msg (let ((prev-id (getf item :prev-id)))
+                                                     (if (and (not (eql prev-id :null))
+                                                              (not (eql prev-id origin-message-id)))
+                                                         (list :author (getf item :prev-author)
+                                                               :created (getf item :prev-created)
+                                                               :href (restas:genurl 'view-reply
+                                                                                    :reply-id (getf item :prev-id)))))
+                                         item)))
           :can-create-message user
           :title (getf message :title))))
 
@@ -173,30 +193,23 @@
 
 ;;;; create reply on message
 
-(define-route create-reply ("thread/:topic-id"
-                            :method :post
-                            :parse-vars (list :topic-id #'parse-integer)
+(define-route create-reply ("messages/reply/:message-id"
+                            :parse-vars (list :message-id #'parse-integer)
                             :requirement 'user-name)
+  (declare (ignore message-id))
+  )
+
+(define-route create-reply/post ("messages/reply/:message-id"
+                                 :method :post
+                                 :parse-vars (list :message-id #'parse-integer)
+                                 :requirement 'user-name)
   (let ((body (hunchentoot:post-parameter "body")))
-    (unless (string= body "")
-      (storage-create-reply *storage* topic-id body (user-name)))
-    (let ((last-page-id (topic-last-page-id topic-id)))
-      (if (= last-page-id 1)
-          (restas:redirect 'view-topic
-                           :topic-id topic-id)
-          (restas:redirect 'view-topic-page
-                           :topic-id topic-id
-                           :page-id last-page-id)))))
-
-
-(define-route create-reply-on-page ("thread/:topic-id/page:(page-id)"
-                                    :method :post
-                                    :parse-vars (list :topic-id #'parse-integer
-                                                      :page-id #'parse-integer)
-                                    :requirement 'user-name)
-  (declare (ignore page-id))
-  (create-reply :topic-id topic-id))
-  
+    (when (string= body "")
+      (view-reply :reply-id message-id))
+    (view-reply :reply-id (storage-create-reply *storage*
+                                                message-id
+                                                body
+                                                (user-name)))))
 
 ;;;; delete reply
 
@@ -216,12 +229,6 @@
         (collect (list* :href (restas:genurl-with-host 'view-reply 
                                                        :reply-id (getf item :id))
                         item))))
-
-(defun site-name ()
-  (or *site-name*
-      (if (boundp 'hunchentoot:*request*)
-          (hunchentoot:host))
-      "RESTAS-FORUMS"))
 
 (define-route all-forums-rss ("rss/all.rss"
                               :content-type "application/rss+xml"

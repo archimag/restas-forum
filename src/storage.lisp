@@ -53,7 +53,7 @@
   (:method (storage topic limit offset)
     (error "#'storage-topic-replies not implemented")))
 
-(defgeneric storage-create-reply (storage topic body user)
+(defgeneric storage-create-reply (storage reply-on body user)
   (:documentation "Create new reply")
   (:method (storage topic body user)
     (error "#'storage-create-reply not implemented")))

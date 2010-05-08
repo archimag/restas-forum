@@ -377,8 +377,8 @@
             {
                 this.original = element;
 
-                if ( newX == 0 && element.cols )
-                    newX = ( element.cols * 8 ) + 21;
+                //if ( newX == 0 && element.cols )
+                //  newX = ( element.cols * 8 ) + 21;
 
                 if ( newY == 0 && element.rows )
                     newY = ( element.rows * 16 ) + 16;

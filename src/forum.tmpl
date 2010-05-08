@@ -91,23 +91,23 @@
         <input type="button" value="+ Новая тему" onclick="newmessage()" />
 
         <form id="editor" method="post" class="newmessage" style="display: none">
-            <div>Новая тема</div>
             <div>
                 <strong>Тема:</strong>
-                <input name="title" size="80"></input>
+                <input name="title" size="80" />
             </div>
             <div>
-                <textarea id="wysiwyg" rows="30" name="body"></textarea>
+                <textarea id="wysiwyg" rows="20" name="body"></textarea>
             </div>
             <div>
-                <input type="submit" value="Отправить"></input>
+                <input type="submit" value="Отправить" />
+                <input type="reset" name="cancel" value="Отмена" />
             </div>
         </form>
     {/if}
 {/template}
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * show-topic
+ * view-topic
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 {template view-topic}
@@ -152,13 +152,20 @@
             </div>
             <div class="topic-info">
                 <span class="topic-author">
-                    Автор: <strong>{$message.author}</strong>
+                    <strong>{$message.author}</strong>
                     - {$message.created}, Сообщений - {$message.countReplies}
                 </span>
             </div>
+            
             <div class="topicbody">
                 {$message.body |noAutoescape}
             </div>
+
+            {if $canCreateMessage}
+                <div class="topic-info">
+                    <a href="{$message.hrefReply}" class="reply-link">Ответить</a>
+                </div>
+            {/if}
         </div>
 
         {call topic-pages-navigation}
@@ -171,15 +178,29 @@
                     {if $reply.hrefDelete}
                         <a class="delete-this" href="{$reply.hrefDelete}">Удалить</a>
                     {/if}
-                    <span class="topic-author">
-                        Автор: <strong>{$reply.author}</strong>
-                        - {$reply.date}
-                    </span>
+                    [<a href="{$reply.href}">#</a>]
+
+                    {if $reply.prevMsg}
+                        Ответ на
+                        <a href="{$reply.prevMsg.href}">комментарий</a>
+                        от {$reply.prevMsg.author} {$reply.prevMsg.created}
+                    {/if}
                 </div>
 
                 <div class="replybody">
                     {$reply.body |noAutoescape}
                 </div>
+
+                {if $canCreateMessage}
+                    <div class="topic-info">
+                        <span class="topic-author">
+                            <strong>{$reply.author}</strong>
+                            - {$reply.date}
+                        </span>
+                        
+                        <a href="{$reply.hrefReply}" class="reply-link">Ответить</a>
+                    </div>
+                {/if}
             </div>
         {/foreach}
 
@@ -189,18 +210,27 @@
     </div>
 
     {if $canCreateMessage}
-       <input type="button" value="+ Новое сообщение" onclick="newmessage()"></input>
        <form method="post" class="newmessage" style="display:none" id="editor">
-           <div>Новое сообщение: </div>
+           <input id="reply-on" style="display:none" />
            <div>
-               <textarea rows="30" name="body" id="wysiwyg"></textarea>
+               <textarea rows="20" name="body" id="wysiwyg"></textarea>
            </div>
            <div>
-               <input type="submit" value="Отправить"></input>
+               <input type="submit" value="Отправить" />
+               <input type="reset" name="cancel" value="Отмена" />
            </div>
        </form>
     {/if}
 {/template}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * create-reply
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+{template create-reply}
+      Извините, этот функционал ещё не реализован.
+{/template}
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * rss
