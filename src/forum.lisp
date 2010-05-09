@@ -46,10 +46,16 @@
       "RESTAS-FORUMS"))
 
 (defun js-urls ()
-  (iter (for item in '("jquery.js" "jquery.wysiwyg.js" "forum.js"))
+  (iter (for item in '("jquery.js" "jquery.wysiwyg.js" "jqModal.js" "forum.js"))
         (collect (restas:genurl-submodule 'resources
                                           'restas.directory-publisher:route
                                           :path (list "js" item)))))
+
+(defun colorize-traits ()
+  (list :href (restas:genurl 'colorize-code)
+        :langs (iter (for (id . title) in (colorize:coloring-types))
+                     (collect (list :id (symbol-name id)
+                                    :title title)))))
 
 ;;;; list all forums
 
@@ -162,7 +168,8 @@
                                                                                     :reply-id (getf item :prev-id)))))
                                          item)))
           :can-create-message user
-          :title (getf message :title))))
+          :title (getf message :title)
+          :colorize (colorize-traits))))
 
 ;;;; view topic
 
@@ -266,3 +273,18 @@
                                          :topic-id topic-id)
           :messages (make-rss-items (storage-topic-news *storage* topic-id *rss-item-count*)))))
                                        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Colorize
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-route colorize-code ("colorize"
+                             :method :post
+                             :render-method 'identity)
+  (let ((code (hunchentoot:post-parameter "code"))
+        (lang (hunchentoot:post-parameter "lang")))
+    (colorize::html-colorization (or (find-symbol lang :keyword)
+                                     (error "Unknow coloring type: ~A" lang))
+                                 code)))
+
+  

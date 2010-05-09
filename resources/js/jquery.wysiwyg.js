@@ -74,7 +74,7 @@
         }
 
         options = $.extend({
-            html : '<'+'?xml version="1.0" encoding="UTF-8"?'+'><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">STYLE_SHEET</head><body style="margin: 0px;">INITIAL_CONTENT</body></html>',
+            html : '<'+'?xml version="1.0" encoding="UTF-8"?'+'><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">STYLE_SHEET</head><body class="wysiwyg" style="margin: 0px;">INITIAL_CONTENT</body></html>',
             css  : {},
 
             debug        : false,
@@ -371,6 +371,7 @@
             $.data(element, 'wysiwyg', this);
 
             var newX = element.width || element.clientWidth;
+
             var newY = element.height || element.clientHeight;
 
             if ( element.nodeName.toLowerCase() == 'textarea' )

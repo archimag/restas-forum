@@ -221,6 +221,8 @@
                <input type="reset" name="cancel" value="Отмена" />
            </div>
        </form>
+
+       {call insertCodeDialog data="$colorize" /}
     {/if}
 {/template}
 
@@ -255,4 +257,27 @@
             {/foreach}
         </channel>
     </rss>
+{/template}
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Insert code dialog
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+{template insertCodeDialog}
+    <div id="insert-code" class="jqmWindow">
+        <select>
+            <option value="NONE">None</option>
+            {foreach $lang in $langs}
+                <option value="{$lang.id}">{$lang.title}</option>
+            {/foreach}
+        </select>
+        <div>
+            <textarea rows="20" cols="80" ></textarea>
+            <div style="display: none"></div>
+        </div>
+        <button id="insert-code-ok">Готово</button>
+        <button id="insert-code-preview">Предпросмотр</button>
+        <button id="insert-code-cancel" class="jqmClose">Отмена</button>
+    </div>
 {/template}
