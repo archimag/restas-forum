@@ -96,7 +96,8 @@
                                                                           :topic-id (getf topic :id)))
                                           topic)))
             :first (1+ start)
-            :can-create-new-topic (user-name)))))
+            :can-create-new-topic (user-name)
+            :colorize (colorize-traits)))))
 
 ;;;; create new topic
 
