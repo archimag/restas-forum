@@ -191,16 +191,17 @@
                     {$reply.body |noAutoescape}
                 </div>
 
-                {if $canCreateMessage}
-                    <div class="topic-info">
-                        <span class="topic-author">
-                            <strong>{$reply.author}</strong>
-                            - {$reply.date}
-                        </span>
-                        
+
+                <div class="topic-info">
+                    <span class="topic-author">
+                        <strong>{$reply.author}</strong>
+                        - {$reply.date}
+                    </span>
+
+                    {if $canCreateMessage}
                         <a href="{$reply.hrefReply}" class="reply-link">Ответить</a>
-                    </div>
-                {/if}
+                    {/if}
+                </div>
             </div>
         {/foreach}
 
