@@ -49,7 +49,7 @@
 (defparameter *restas-forum-pathname* 
   (asdf:component-pathname (asdf:find-system '#:restas-forum)))
 
-(restas:define-submodule resources (#:restas.directory-publisher)
+(restas:mount-submodule resources (#:restas.directory-publisher)
   (restas.directory-publisher:*directory* (merge-pathnames "resources/"
                                                            *restas-forum-pathname*))
   (restas.directory-publisher:*autoindex* nil))
