@@ -14,7 +14,7 @@
       (funcall *user-name-function*)))
 
 (defun parse-start ()
-  (or (ignore-errors (parse-integer (hunchentoot:get-parameter "start")))
+  (or (ignore-errors (parse-integer (wsal:get-parameter "start")))
       0))
 
 (defun forum-info-plist (info)
@@ -41,8 +41,8 @@
 
 (defun site-name ()
   (or *site-name*
-      (if (boundp 'hunchentoot:*request*)
-          (hunchentoot:host))
+      (if (boundp 'wsal:*request*)
+          (wsal:host))
       "RESTAS-FORUMS"))
 
 (defun js-urls ()
@@ -104,8 +104,8 @@
 (restas:define-route create-topic (":forum-id"
                                    :method :post
                                    :requirement 'user-name)
-  (let ((title (hunchentoot:post-parameter "title"))
-        (body (hunchentoot:post-parameter "body")))
+  (let ((title (wsal:post-parameter "title"))
+        (body (wsal:post-parameter "body")))
     (unless (or (string= title "")
                 (string= body ""))
       (storage-create-topic *storage*
@@ -124,7 +124,7 @@
   (if (storage-admin-p *storage* (user-name))
       (restas:redirect 'list-topics
                        :forum-id (storage-delete-topic *storage* topic-id))
-      hunchentoot:+http-forbidden+))
+      wsal:+http-forbidden+))
 
 ;;;; view-topic-page
 
@@ -185,10 +185,10 @@
                                  :parse-vars (list :reply-id #'parse-integer))
   (multiple-value-bind (pos topic-id) (storage-reply-position *storage* reply-id)
     (unless topic-id
-      (return-from view-reply hunchentoot:+http-not-found+))
+      (return-from view-reply wsal:+http-not-found+))
     (let ((page (ceiling pos
                          *max-reply-on-page*)))
-      (hunchentoot:redirect
+      (restas:redirect
        (format nil
                "~A#comment-~A"
                (if (= page 1)
@@ -211,7 +211,7 @@
                                         :method :post
                                         :parse-vars (list :message-id #'parse-integer)
                                         :requirement 'user-name)
-  (let ((body (hunchentoot:post-parameter "body")))
+  (let ((body (wsal:post-parameter "body")))
     (when (string= body "")
       (view-reply :reply-id message-id))
     (view-reply :reply-id (storage-create-reply *storage*
@@ -226,7 +226,7 @@
   (if (storage-admin-p *storage* (user-name))
       (restas:redirect 'view-topic
                        :topic-id (storage-delete-reply *storage* reply-id))
-      hunchentoot:+http-forbidden+))
+      wsal:+http-forbidden+))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; RSS
@@ -282,8 +282,8 @@
 (restas:define-route colorize-code ("colorize"
                                     :method :post
                                     :render-method 'identity)
-  (let ((code (hunchentoot:post-parameter "code"))
-        (lang (hunchentoot:post-parameter "lang")))
+  (let ((code (wsal:post-parameter "code"))
+        (lang (wsal:post-parameter "lang")))
     (colorize::html-colorization (or (find-symbol lang :keyword)
                                      (error "Unknow coloring type: ~A" lang))
                                  code)))
