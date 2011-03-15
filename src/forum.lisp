@@ -234,8 +234,8 @@
 
 (defun make-rss-items (items)
   (iter (for item in items)
-        (collect (list* :href (restas:genurl-with-host 'view-reply 
-                                                       :reply-id (getf item :id))
+        (collect (list* :href (restas:gen-full-url 'view-reply 
+                                                   :reply-id (getf item :id))
                         item))))
 
 (restas:define-route all-forums-rss ("rss/all.rss"
@@ -244,7 +244,7 @@
   (let ((title (format nil "~A: Форумы" (site-name))))
     (list :title title
           :description title
-          :link (restas:genurl-with-host 'list-forums)
+          :link (restas:gen-full-url 'list-forums)
           :messages (make-rss-items (storage-all-news *storage* *rss-item-count*)))))
                         
 (restas:define-route forum-rss ("rss/:(forum-id).rss"
@@ -256,8 +256,8 @@
                        (first (storage-forum-info *storage* forum-id)))))
     (list :title title
           :description title
-          :link (restas:genurl-with-host 'list-topics
-                                         :forum-id forum-id)
+          :link (restas:gen-full-url 'list-topics
+                                     :forum-id forum-id)
           :messages (make-rss-items (storage-forum-news *storage* forum-id *rss-item-count*)))))
 
 (restas:define-route topic-rss ("rss/threads/:(topic-id).rss"
@@ -270,8 +270,8 @@
                          (site-name)
                          (getf message :title))
           :description (getf message :body)
-          :link (restas:genurl-with-host 'view-topic
-                                         :topic-id topic-id)
+          :link (restas:gen-full-url 'view-topic
+                                     :topic-id topic-id)
           :messages (make-rss-items (storage-topic-news *storage* topic-id *rss-item-count*)))))
                                        
 
