@@ -47,9 +47,8 @@
 
 (defun js-urls ()
   (iter (for item in '("jquery.js" "jquery.wysiwyg.js" "jqModal.js" "forum.js"))
-        (collect (restas:genurl-submodule 'resources
-                                          'restas.directory-publisher:route
-                                          :path (list "js" item)))))
+        (collect (restas:genurl 'resources.route
+                                :path (list "js" item)))))
 
 (defun colorize-traits ()
   (list :href (restas:genurl 'colorize-code)
@@ -101,9 +100,8 @@
 
 ;;;; create new topic
 
-(restas:define-route create-topic (":forum-id"
-                                   :method :post
-                                   :requirement 'user-name)
+(restas:define-route create-topic (":forum-id" :method :post)
+  (:requirement 'user-name)
   (let ((title (hunchentoot:post-parameter "title"))
         (body (hunchentoot:post-parameter "body")))
     (unless (or (string= title "")
@@ -118,9 +116,9 @@
 
 ;;;; delete topic
 
-(restas:define-route delete-topic ("thread/delete/:topic-id"
-                                   :requirement 'user-name
-                                   :parse-vars (list :topic-id #'parse-integer))
+(restas:define-route delete-topic ("thread/delete/:topic-id")
+  (:requirement 'user-name)
+  (:sift-variables (topic-id 'integer))
   (if (storage-admin-p *storage* (user-name))
       (restas:redirect 'list-topics
                        :forum-id (storage-delete-topic *storage* topic-id))
@@ -129,9 +127,8 @@
 ;;;; view-topic-page
 
   
-(restas:define-route view-topic-page ("thread/:topic-id/page:(page-id)"
-                                      :parse-vars (list :topic-id #'parse-integer
-                                                        :page-id #'parse-integer))
+(restas:define-route view-topic-page ("thread/:topic-id/page:(page-id)")
+  (:sift-variables (topic-id 'integer) (page-id 'integer))
   (let* ((message (storage-topic-message *storage* topic-id))
          (origin-message-id (getf message :message-id))
          (start (max (* *max-reply-on-page*
@@ -174,15 +171,15 @@
 
 ;;;; view topic
 
-(restas:define-route view-topic ("thread/:topic-id"
-                                 :parse-vars (list :topic-id #'parse-integer))
-  (view-topic-page :topic-id topic-id
-                   :page-id 1))
+(restas:define-route view-topic ("thread/:topic-id")
+  (:sift-variables (topic-id 'integer))
+  (view-topic-page topic-id 1))
+
 
 ;;;; view-reply
 
-(restas:define-route view-reply ("messages/:reply-id"
-                                 :parse-vars (list :reply-id #'parse-integer))
+(restas:define-route view-reply ("messages/:reply-id")
+  (:sift-variables (:reply-id 'integer))
   (multiple-value-bind (pos topic-id) (storage-reply-position *storage* reply-id)
     (unless topic-id
       (return-from view-reply hunchentoot:+http-not-found+))
@@ -201,28 +198,27 @@
 
 ;;;; create reply on message
 
-(restas:define-route create-reply ("messages/reply/:message-id"
-                                   :parse-vars (list :message-id #'parse-integer)
-                                   :requirement 'user-name)
+(restas:define-route create-reply ("messages/reply/:message-id")
+  (:sift-variables (:message-id 'integer))
+  (:requirement 'user-name)
   (declare (ignore message-id))
   )
 
-(restas:define-route create-reply/post ("messages/reply/:message-id"
-                                        :method :post
-                                        :parse-vars (list :message-id #'parse-integer)
-                                        :requirement 'user-name)
+(restas:define-route create-reply/post ("messages/reply/:message-id" :method :post)
+  (:sift-variables (message-id 'integer))
+  (:requirement 'user-name)
   (let ((body (hunchentoot:post-parameter "body")))
     (when (string= body "")
-      (view-reply :reply-id message-id))
-    (view-reply :reply-id (storage-create-reply *storage*
-                                                message-id
-                                                body
-                                                (user-name)))))
+      (view-reply message-id))
+    (view-reply (storage-create-reply *storage*
+                                      message-id
+                                      body
+                                      (user-name)))))
 
 ;;;; delete reply
 
-(restas:define-route delete-message ("message/delete/:(reply-id)"
-                                     :requirement 'user-name)
+(restas:define-route delete-message ("message/delete/:(reply-id)")
+  (:requirement 'user-name)
   (if (storage-admin-p *storage* (user-name))
       (restas:redirect 'view-topic
                        :topic-id (storage-delete-reply *storage* reply-id))
@@ -234,44 +230,38 @@
 
 (defun make-rss-items (items)
   (iter (for item in items)
-        (collect (list* :href (restas:gen-full-url 'view-reply 
-                                                   :reply-id (getf item :id))
+        (collect (list* :href (restas:genurl* 'view-reply :reply-id (getf item :id))
                         item))))
 
-(restas:define-route all-forums-rss ("rss/all.rss"
-                                     :content-type "application/rss+xml"
-                                     :render-method 'restas.forum.view:rss-feed)
+(restas:define-route all-forums-rss ("rss/all.rss" :content-type "application/rss+xml")
+  (:render-method 'restas.forum.view:rss-feed)
   (let ((title (format nil "~A: Форумы" (site-name))))
     (list :title title
           :description title
-          :link (restas:gen-full-url 'list-forums)
+          :link (restas:genurl* 'list-forums)
           :messages (make-rss-items (storage-all-news *storage* *rss-item-count*)))))
                         
-(restas:define-route forum-rss ("rss/:(forum-id).rss"
-                                :content-type "application/rss+xml"
-                                :render-method 'restas.forum.view:rss-feed)
+(restas:define-route forum-rss ("rss/:(forum-id).rss" :content-type "application/rss+xml")
+  (:render-method 'restas.forum.view:rss-feed)
   (let ((title (format nil
                        "~A: Форум - ~A"
                        (site-name)
                        (first (storage-forum-info *storage* forum-id)))))
     (list :title title
           :description title
-          :link (restas:gen-full-url 'list-topics
-                                     :forum-id forum-id)
+          :link (restas:genurl* 'list-topics :forum-id forum-id)
           :messages (make-rss-items (storage-forum-news *storage* forum-id *rss-item-count*)))))
 
-(restas:define-route topic-rss ("rss/threads/:(topic-id).rss"
-                                :parse-vars `(:topic-id ,#'parse-integer)
-                                :content-type "application/rss+xml"
-                                :render-method 'restas.forum.view:rss-feed)
+(restas:define-route topic-rss ("rss/threads/:(topic-id).rss" :content-type "application/rss+xml")
+  (:sift-variables (topic-id 'integer))
+  (:render-method 'restas.forum.view:rss-feed)
   (let ((message (storage-topic-message *storage* topic-id)))
     (list :title (format nil
                          "~A: ~A"
                          (site-name)
                          (getf message :title))
           :description (getf message :body)
-          :link (restas:gen-full-url 'view-topic
-                                     :topic-id topic-id)
+          :link (restas:genurl* 'view-topic :topic-id topic-id)
           :messages (make-rss-items (storage-topic-news *storage* topic-id *rss-item-count*)))))
                                        
 
@@ -279,9 +269,8 @@
 ;;;; Colorize
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(restas:define-route colorize-code ("colorize"
-                                    :method :post
-                                    :render-method 'identity)
+(restas:define-route colorize-code ("colorize" :method :post)
+  (:render-method 'identity)
   (let ((code (hunchentoot:post-parameter "code"))
         (lang (hunchentoot:post-parameter "lang")))
     (colorize::html-colorization (or (find-symbol lang :keyword)
