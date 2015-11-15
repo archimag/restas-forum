@@ -6,7 +6,7 @@
 ;;;; Author: Moskvitin Andrey <archimag@gmail.com>
 
 (defsystem restas-forum
-  :depends-on (#:restas #:closure-template #:restas-directory-publisher #:metabang-bind #:colorize)
+  :depends-on (#:restas #:closure-template #:restas-directory-publisher #:metabang-bind #:colorize #:cl-libxml2)
   :components ((:module "src"
                         :components ((:file "defmodule")
                                      (:file "storage" :depends-on ("defmodule"))

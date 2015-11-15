@@ -233,8 +233,32 @@
         (collect (list* :href (restas:genurl* 'view-reply :reply-id (getf item :id))
                         item))))
 
+(defun make-rss-feed (feed)
+  (let ((title (getf feed :title))
+        (description (getf feed :description))
+        (link (getf feed :link))
+        (messages (getf feed :messages)))
+    #|------------------------------------------------------------------------|#
+    (xtree:with-parse-document(doc  "<rss version=\"2.0\" />")
+      #|----------------------------------------------------------------------|#
+      (let ((channel (xtree:make-child-element (xtree:root doc) "channel")))
+        #|--------------------------------------------------------------------|#
+        (setf (xtree:text-content (xtree:make-child-element channel "title")) title
+              (xtree:text-content (xtree:make-child-element channel "link")) link
+              (xtree:text-content (xtree:make-child-element channel "description")) description)
+        #|--------------------------------------------------------------------|#
+        (iter (for message in messages)
+              (let ((item (xtree:make-child-element channel "item")))
+                (setf (xtree:text-content (xtree:make-child-element item "title")) (xtree:encode-special-chars doc (getf message :title))
+                      (xtree:text-content (xtree:make-child-element item "link")) (xtree:encode-special-chars doc (getf message :href))
+                      (xtree:text-content (xtree:make-child-element item "description")) (xtree:encode-special-chars doc (getf message :message))
+                      (xtree:text-content (xtree:make-child-element item "pubDate")) (xtree:encode-special-chars doc (getf message :date))))))
+      #|----------------------------------------------------------------------|#
+      (xtree:serialize doc :to-string))))
+
 (restas:define-route all-forums-rss ("rss/all.rss" :content-type "application/rss+xml")
-  (:render-method 'restas.forum.view:rss-feed)
+  (:render-method 'make-rss-feed)
+  #|--------------------------------------------------------------------------|#
   (let ((title (format nil "~A: Форумы" (site-name))))
     (list :title title
           :description title
@@ -242,7 +266,8 @@
           :messages (make-rss-items (storage-all-news *storage* *rss-item-count*)))))
                         
 (restas:define-route forum-rss ("rss/:(forum-id).rss" :content-type "application/rss+xml")
-  (:render-method 'restas.forum.view:rss-feed)
+  (:render-method 'make-rss-feed)
+  #|--------------------------------------------------------------------------|#
   (let ((title (format nil
                        "~A: Форум - ~A"
                        (site-name)
@@ -254,7 +279,8 @@
 
 (restas:define-route topic-rss ("rss/threads/:(topic-id).rss" :content-type "application/rss+xml")
   (:sift-variables (topic-id 'integer))
-  (:render-method 'restas.forum.view:rss-feed)
+  (:render-method 'make-rss-feed)
+  #|--------------------------------------------------------------------------|#
   (let ((message (storage-topic-message *storage* topic-id)))
     (list :title (format nil
                          "~A: ~A"
