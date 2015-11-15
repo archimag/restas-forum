@@ -249,7 +249,7 @@
         #|--------------------------------------------------------------------|#
         (iter (for message in messages)
               (let ((item (xtree:make-child-element channel "item")))
-                (setf (xtree:text-content (xtree:make-child-element item "title")) (xtree:encode-special-chars doc (getf message :title))
+                (setf (xtree:text-content (xtree:make-child-element item "title")) (xtree:encode-special-chars doc (format nil "~A: ~A" (getf message :author) (getf message :title)))
                       (xtree:text-content (xtree:make-child-element item "link")) (xtree:encode-special-chars doc (getf message :href))
                       (xtree:text-content (xtree:make-child-element item "description")) (xtree:encode-special-chars doc (getf message :message))
                       (xtree:text-content (xtree:make-child-element item "pubDate")) (xtree:encode-special-chars doc (getf message :date))))))
